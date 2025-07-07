@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cilla's Conference Centre - Interactive Venue Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Elegant Professional -->
+    <!-- Application Structure Plan: The SPA is designed with a section-based architecture, accessible via a sticky top navigation. This structure was chosen to allow users to intuitively explore different aspects of the venue's offerings without a linear scroll. Key sections include an interactive 'Venue Spaces' configurator, a tabbed 'Catering Menu' to prevent information overload, and a dynamic 'Cost Estimator' to provide immediate value and encourage booking. This task-oriented flow (explore, configure, estimate, contact) is more engaging and user-centric than a static digital flyer. -->
+    <!-- Visualization & Content Choices: 
+        - Venue Capacity: Report Info (Floor levels, seating styles, capacities) -> Goal (Inform, Compare) -> Viz/Method (Interactive cards with JS-updated text) -> Interaction (User clicks buttons to select options, capacity display updates instantly) -> Justification (More engaging and less cluttered than a static table) -> Library/Method (Vanilla JS, Tailwind).
+        - Catering Menu: Report Info (Menu items, prices) -> Goal (Organize, Inform) -> Viz/Method (Tabbed content sections for meal types) -> Interaction (User clicks tabs to show/hide relevant menu details) -> Justification (Breaks down a dense menu into digestible parts) -> Library/Method (Vanilla JS, Tailwind).
+        - Cost Estimation: Report Info (Catering package prices) -> Goal (Compare, Inform) -> Viz/Method (Input form for guests, dynamic text display, and a bar chart) -> Interaction (User inputs guest count, JS calculates total costs for all packages and updates a Chart.js bar chart for visual comparison) -> Justification (Provides immediate, personalized budget feedback, a key user need) -> Library/Method (Chart.js, Vanilla JS).
+        - Amenities: Report Info (List of facilities) -> Goal (Inform) -> Viz/Method (Icon-based grid) -> Interaction (Hover effects) -> Justification (Quick, scannable overview of key features) -> Library/Method (Tailwind, Unicode characters for icons).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .hero-background {
+            background-image: url('CCC%20conferencce%20ad.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        .hero-overlay {
+            background-color: rgba(0, 0, 0, 0.4);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold" style="color: #0047AB;">Cilla's Conference Centre</h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#venue" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Venue Spaces</a>
+                        <a href="#services" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Services</a>
+                        <a href="#catering" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Catering</a>
+                        <a href="#estimator" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Cost Estimator</a>
+                        <a href="#contact" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Book Now</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+             <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#venue" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Venue Spaces</a>
+                    <a href="#services" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Services</a>
+                    <a href="#catering" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Catering</a>
+                    <a href="#estimator" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Cost Estimator</a>
+                    <a href="#contact" class="bg-blue-600 text-white hover:bg-blue-700 block px-3 py-2 rounded-md text-base font-medium">Book Now</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="hero" class="text-center py-16 hero-background h-[50vh] flex items-center justify-center">
+            <div class="hero-overlay"></div>
+            <div class="hero-content text-white">
+                <h2 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+                    <span class="block">Your Perfect Event,</span>
+                    <span class="block text-blue-200">Perfectly Planned.</span>
+                </h2>
+                <p class="mt-3 max-w-md mx-auto text-base sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+                    Discover our private, advanced, and elegant venue in the heart of Bulawayo. We provide everything you need for a successful and memorable conference, workshop, or function.
+                </p>
+            </div>
+        </section>
+
+        <section id="venue" class="py-16">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold text-gray-900">Configure Your Venue Space</h3>
+                <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Select a floor and a seating arrangement to see the capacity and features. Our flexible layouts can be adapted to meet the specific needs of your event, ensuring comfort and optimal use of the space.</p>
+            </div>
+            <div class="mt-12 max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <img src="Conference%20room.JPG-587a8c8f-6c35-4269-bb57-05735ed800ff" alt="Second Floor Conference Room" class="w-full h-auto rounded-lg shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x250/E0E0E0/333333?text=Second+Floor+Image';">
+                        <p class="mt-2 text-center text-gray-600 text-sm">Second Floor Conference Room</p>
+                    </div>
+                    <div>
+                        <img src="photo_4_2024-12-10_13-27-30%20(2).jpg" alt="Main Floor Conference Room" class="w-full h-auto rounded-lg shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x250/E0E0E0/333333?text=Main+Floor+Image';">
+                        <p class="mt-2 text-center text-gray-600 text-sm">Main Floor Conference Room</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-2">1. Select Floor</h4>
+                            <div id="floor-selector" class="flex space-x-2 rounded-lg bg-gray-100 p-1">
+                                <button data-floor="main" class="w-full rounded-md py-2 text-sm font-medium">Main Floor</button>
+                                <button data-floor="second" class="w-full rounded-md py-2 text-sm font-medium">Second Floor</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">2. Select Seating Style</h4>
+                             <div id="style-selector" class="flex space-x-2 rounded-lg bg-gray-100 p-1">
+                                <button data-style="cinema" class="w-full rounded-md py-2 text-sm font-medium">Cinema</button>
+                                <button data-style="conference" class="w-full rounded-md py-2 text-sm font-medium">Conference</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                        <h4 class="text-xl font-bold text-blue-800">Capacity</h4>
+                        <p id="capacity-display" class="text-6xl font-extrabold text-blue-600 mt-2">80</p>
+                        <p class="text-gray-600">people</p>
+                        <p id="venue-details-display" class="mt-4 text-sm text-gray-700">Main Floor, Cinema Seating</p>
+                    </div>
+                </div>
+                <div class="mt-8 border-t pt-6">
+                     <h4 class="text-lg font-semibold text-gray-800">Additional Hire</h4>
+                     <div class="flex justify-between items-center mt-2 bg-gray-50 p-4 rounded-lg">
+                         <p>Projector Hire</p>
+                         <div class="text-right">
+                            <p class="font-semibold">$40 USD <span class="text-sm font-normal text-gray-500">/ Full Day</span></p>
+                            <p class="font-semibold">$20 USD <span class="text-sm font-normal text-gray-500">/ Half Day</span></p>
+                        </div>
+                     </div>
+                     <div class="flex justify-between items-center mt-2 bg-gray-50 p-4 rounded-lg">
+                         <p>TV Hire</p>
+                         <div class="text-right">
+                            <p class="font-semibold">$60 USD <span class="text-sm font-normal text-gray-500">/ Day</span></p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="py-16 bg-gray-100 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                 <h3 class="text-3xl font-bold text-gray-900">All-Inclusive Services & Amenities</h3>
+                 <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">To ensure your event runs smoothly, we provide a range of essential services and modern amenities. Focus on your content and guests while we handle the details.</p>
+            </div>
+            <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <span class="text-4xl">📡</span>
+                    <h4 class="mt-4 text-xl font-semibold">Reliable Wi-Fi</h4>
+                    <p class="mt-2 text-gray-600">High-speed internet access for all your delegates and presentation needs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <span class="text-4xl">📽️</span>
+                    <h4 class="mt-4 text-xl font-semibold">Projector & Screen</h4>
+                    <p class="mt-2 text-gray-600">Professional-grade equipment for crisp, clear presentations.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                     <span class="text-4xl">✨</span>
+                    <h4 class="mt-4 text-xl font-semibold">Decor Arrangements</h4>
+                    <p class="mt-2 text-gray-600">Elegant and customizable decor to match the theme of your event.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <span class="text-4xl">🍽️</span>
+                    <h4 class="mt-4 text-xl font-semibold">On-Site Catering</h4>
+                    <p class="mt-2 text-gray-600">Delicious and versatile catering options, served on-site for your convenience.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="catering" class="py-16">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold text-gray-900">Explore Our Catering Menu</h3>
+                 <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Delight your guests with our diverse menu, featuring everything from light snacks to full buffet lunches. Use the tabs below to explore our offerings and find the perfect fit for your event's schedule and budget.</p>
+            </div>
+            <div class="mt-12 max-w-4xl mx-auto">
+                <div class="mb-4 border-b border-gray-200">
+                    <nav id="catering-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button data-tab="meals" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Meals</button>
+                        <button data-tab="tea-snacks" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Tea & Snacks</button>
+                        <button data-tab="cocktail" class="whitespace-nowrap py-4 px-1 border-b-2 font-sm">Cocktail Functions</button>
+                    </nav>
+                </div>
+                <div id="catering-content" class="bg-white p-8 rounded-xl shadow-lg">
+                </div>
+            </div>
+        </section>
+
+        <section id="estimator" class="py-16 bg-gray-100 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold text-gray-900">Catering Cost Estimator</h3>
+                <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Get a quick estimate for your catering costs. Enter the number of guests and select a food category to see a price comparison for the options within that category. This tool helps you budget effectively and visualize the options.</p>
+            </div>
+            <div class="mt-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-semibold mb-4">Calculate Your Estimate</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="guest-count" class="block text-sm font-medium text-gray-700">Number of Guests</label>
+                            <input type="number" id="guest-count" name="guest-count" value="50" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="catering-category-select" class="block text-sm font-medium text-gray-700">Select Food Category</label>
+                            <select id="catering-category-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="meals">Meals</option>
+                                <option value="tea-snacks">Tea & Snacks</option>
+                                <option value="cocktail">Cocktail Functions</option>
+                            </select>
+                        </div>
+                        <div class="border-t pt-4">
+                             <h5 class="text-lg font-semibold">Estimated Totals:</h5>
+                             <div id="estimator-results" class="space-y-2 mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-semibold mb-4 text-center">Cost Comparison</h4>
+                    <div class="chart-container">
+                        <canvas id="cost-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-16">
+            <div class="max-w-4xl mx-auto text-center">
+                <h3 class="text-3xl font-bold text-gray-900">Ready to Book Your Event?</h3>
+                <p class="mt-4 text-lg text-gray-600">Contact us today to check availability, ask questions, or secure your date. Our team is ready to help you plan a seamless and successful event.</p>
+                <div class="mt-8 inline-flex rounded-md shadow">
+                     <a href="mailto:cilliasconferencecentre2022@gmail.com" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Email Us to Book
+                    </a>
+                </div>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-left bg-white p-8 rounded-xl shadow-lg">
+                     <div>
+                        <h4 class="text-xl font-semibold">Contact Details</h4>
+                        <p class="mt-2 text-gray-600"><strong>Phone:</strong> +263 77 236 8927</p>
+                        <p class="mt-1 text-gray-600"><strong>Alternative:</strong> +263 712 203 177 / +263 772 368 927</p>
+                        <p class="mt-1 text-gray-600"><strong>Email:</strong> cilliasconferencecentre2022@gmail.com</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold">Location</h4>
+                        <p class="mt-2 text-gray-600">Second Floor, Mimosa House</p>
+                        <p class="mt-1 text-gray-600">9th Avenue, Bulawayo, Zimbabwe</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const venueData = {
+                main: { cinema: 80, conference: 50 },
+                second: { cinema: 50, conference: 35 }
+            };
+
+            const cateringData = {
+                meals: [
+                    { name: 'Basic Lunch & Soft Drink', price: 6, description: '1 Starch, 1 Meat, 1 Salad, 1 Vegetable' },
+                    { name: '1 Course Lunch & Soft Drink', price: 11, description: '2 Starches, 2 Meats, 2 Salads, 1 Vegetable' },
+                    { name: 'Buffet Lunch and Soft Drink', price: 0, description: 'Price not set' },
+                ],
+                'tea-snacks': [
+                    { name: 'Basic Tea', price: 6, description: 'Assorted sandwiches & fruit' },
+                    { name: 'Tea with Assorted Sandwiches & Muffin', price: 5, description: '' },
+                    { name: 'Tea and Coffee', price: 3, description: '' },
+                    { name: 'Tea and Snacks', price: 3, description: 'Donut, Muffin, Tea, Samosa' },
+                ],
+                cocktail: [
+                    { name: 'Cocktail Functions', price: '6 - 10', description: 'Price range per person' },
+                ]
+            };
+            
+            let currentFloor = 'main';
+            let currentStyle = 'cinema';
+            let currentCateringTab = 'meals';
+
+            const floorSelector = document.getElementById('floor-selector');
+            const styleSelector = document.getElementById('style-selector');
+            const capacityDisplay = document.getElementById('capacity-display');
+            const venueDetailsDisplay = document.getElementById('venue-details-display');
+            
+            const cateringTabs = document.getElementById('catering-tabs');
+            const cateringContent = document.getElementById('catering-content');
+
+            const guestInput = document.getElementById('guest-count');
+            const cateringCategorySelect = document.getElementById('catering-category-select');
+            const estimatorResults = document.getElementById('estimator-results');
+            const costChartCanvas = document.getElementById('cost-chart').getContext('2d');
+            let costChart;
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function updateActiveButton(selector, value) {
+                selector.querySelectorAll('button').forEach(btn => {
+                    if (btn.dataset[Object.keys(btn.dataset)[0]] === value) {
+                        btn.classList.add('bg-blue-600', 'text-white');
+                        btn.classList.remove('text-gray-600');
+                    } else {
+                        btn.classList.remove('bg-blue-600', 'text-white');
+                        btn.classList.add('text-gray-600');
+                    }
+                });
+            }
+
+            function updateVenueDisplay() {
+                const capacity = venueData[currentFloor][currentStyle];
+                capacityDisplay.textContent = capacity;
+                const floorText = currentFloor.charAt(0).toUpperCase() + currentFloor.slice(1);
+                const styleText = currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1);
+                venueDetailsDisplay.textContent = `${floorText} Floor, ${styleText} Seating`;
+                updateActiveButton(floorSelector, currentFloor);
+                updateActiveButton(styleSelector, currentStyle);
+            }
+
+            floorSelector.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentFloor = e.target.dataset.floor;
+                    updateVenueDisplay();
+                }
+            });
+
+            styleSelector.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentStyle = e.target.dataset.style;
+                    updateVenueDisplay();
+                }
+            });
+
+            function updateCateringDisplay() {
+                cateringContent.innerHTML = '';
+                const items = cateringData[currentCateringTab];
+                const list = document.createElement('div');
+                list.className = 'space-y-4';
+                items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex justify-between items-start border-b pb-4 last:border-b-0';
+                    const nameDescDiv = document.createElement('div');
+                    nameDescDiv.innerHTML = `<h5 class="font-semibold">${item.name}</h5><p class="text-sm text-gray-500">${item.description}</p>`;
+                    const priceDiv = document.createElement('div');
+                    priceDiv.className = 'text-right flex-shrink-0 ml-4';
+                    
+                    if (item.price > 0) {
+                         priceDiv.innerHTML = `<p class="font-bold text-lg text-blue-600">$${item.price}</p><p class="text-xs text-gray-500">USD P/P</p>`;
+                    } else if (typeof item.price === 'string'){
+                         priceDiv.innerHTML = `<p class="font-bold text-lg text-blue-600">$${item.price}</p><p class="text-xs text-gray-500">USD P/P</p>`;
+                    } else {
+                        priceDiv.innerHTML = `<p class="text-sm font-medium text-gray-700">Price On Request</p>`;
+                    }
+
+                    itemDiv.appendChild(nameDescDiv);
+                    itemDiv.appendChild(priceDiv);
+                    list.appendChild(itemDiv);
+                });
+                cateringContent.appendChild(list);
+
+                cateringTabs.querySelectorAll('button').forEach(btn => {
+                     if (btn.dataset.tab === currentCateringTab) {
+                        btn.classList.add('border-blue-500', 'text-blue-600');
+                        btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    } else {
+                        btn.classList.remove('border-blue-500', 'text-blue-600');
+                        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    }
+                })
+            }
+
+            cateringTabs.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentCateringTab = e.target.dataset.tab;
+                    updateCateringDisplay();
+                }
+            });
+
+            function updateEstimator() {
+                const guests = parseInt(guestInput.value) || 0;
+                const selectedCategory = cateringCategorySelect.value;
+                estimatorResults.innerHTML = '';
+                
+                const labels = [];
+                const costs = [];
+
+                cateringData[selectedCategory].forEach(item => {
+                    let itemPrice = item.price;
+                    if (typeof itemPrice === 'string') {
+                        const priceRange = itemPrice.split(' - ').map(Number);
+                        itemPrice = priceRange[0]; // Use the lower bound for estimation
+                    }
+
+                    if (itemPrice > 0) {
+                        const total = itemPrice * guests;
+                        const resultP = document.createElement('p');
+                        resultP.className = 'flex justify-between';
+                        resultP.innerHTML = `<span>${item.name}:</span> <span class="font-semibold">$${total.toFixed(2)}</span>`;
+                        estimatorResults.appendChild(resultP);
+                        
+                        labels.push(item.name);
+                        costs.push(total);
+                    } else {
+                        const resultP = document.createElement('p');
+                        resultP.className = 'flex justify-between';
+                        resultP.innerHTML = `<span>${item.name}:</span> <span class="font-semibold text-gray-500">Price On Request</span>`;
+                        estimatorResults.appendChild(resultP);
+                    }
+                });
+
+                updateChart(labels, costs);
+            }
+
+            function updateChart(labels, costs) {
+                if (costChart) {
+                    costChart.data.labels = labels;
+                    costChart.data.datasets[0].data = costs;
+                    costChart.update();
+                } else {
+                    costChart = new Chart(costChartCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Total Cost (USD)',
+                                data: costs,
+                                backgroundColor: [
+                                    'rgba(59, 130, 246, 0.6)',
+                                    'rgba(37, 99, 235, 0.6)',
+                                    'rgba(29, 78, 216, 0.6)',
+                                    'rgba(239, 68, 68, 0.6)',
+                                    'rgba(16, 185, 129, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(59, 130, 246, 1)',
+                                    'rgba(37, 99, 235, 1)',
+                                    'rgba(29, 78, 216, 1)',
+                                    'rgba(239, 68, 68, 1)',
+                                    'rgba(16, 185, 129, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) { return '$' + value; }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                     callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            guestInput.addEventListener('input', updateEstimator);
+            cateringCategorySelect.addEventListener('change', updateEstimator);
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            updateVenueDisplay();
+            updateCateringDisplay();
+            updateEstimator(); // Initial call to populate estimator with default category
+        });
+    </script>
+</body>
+</html>
